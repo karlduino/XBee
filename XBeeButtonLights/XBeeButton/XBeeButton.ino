@@ -20,7 +20,7 @@ void setup() {
 
 void loop() {
   button_val = digitalRead(BUTTON);
-    
+
   if((button_val == HIGH) && (prev_button_val == LOW)) {
       state++;
       if(state > 2) state = 0;
@@ -34,10 +34,9 @@ void loop() {
       else if (state == 2) {
         Serial.print('G');
       }
-    
+
       delay(20);
   }
 
   prev_button_val = button_val;
 }
-
