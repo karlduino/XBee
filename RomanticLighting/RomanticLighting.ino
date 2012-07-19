@@ -91,7 +91,7 @@ void setRemoteStatus(int value) {
 
   // length
   Serial.write((byte)0); // high part of length
-  Serial.write(0x10); // low part of length <- shouldn't this be 16?
+  Serial.write(0x10); // low part of length (note that 0x10 is hex for 16)
 
   // frame type: 0x17 = remote AT command
   Serial.write(0x17);
@@ -105,7 +105,9 @@ void setRemoteStatus(int value) {
   for(int i=0; i<6; i++) {
     Serial.write((byte)0);
   }
-  for(int i=0; i<3; i++) {
+  for(int i=0; i<2; i++) {
+    Serial.write(0xFF);
+    checksum += 0xFF;
   }
 
   // 16-bit destination address
@@ -121,8 +123,7 @@ void setRemoteStatus(int value) {
   // D1 = set pin 1
   Serial.write('D');
   Serial.write('1');
-  checksum += 'D';
-  checksum += '1';
+  checksum += ('D' + '1');
 
   // turn on or off
   Serial.write(value);
