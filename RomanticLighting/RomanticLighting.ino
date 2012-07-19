@@ -84,35 +84,53 @@ void loop() {
 // 0x4 = pin off
 // 0x5 = pin on
 void setRemoteStatus(int value) {
-  long sum;
+  long checksum;
 
+  // start delimiter
   Serial.write(0x7E);
-  Serial.write((byte)0); // high part of length
-  Serial.write(0x10); // low part of length
-  Serial.write(0x17); // remote AT command
-  Serial.write((byte)0); // frame id; 0 means no reply
-  sum += 0x17;
 
+  // length
+  Serial.write((byte)0); // high part of length
+  Serial.write(0x10); // low part of length <- shouldn't this be 16?
+
+  // frame type: 0x17 = remote AT command
+  Serial.write(0x17);
+  checksum += 0x17;
+
+  // frame id: 0 means no reply
+  Serial.write((byte)0);
+
+  // 64-bit destination address
+  // 0x00 00 00 00 00 00 FF FF = broadcast
   for(int i=0; i<6; i++) {
     Serial.write((byte)0);
   }
   for(int i=0; i<3; i++) {
-    Serial.write(0xFF);
-    sum += 0xFF;
   }
+
+  // 16-bit destination address
+  Serial.write(0xFF);
   Serial.write(0xFE);
-  sum += 0xFE;
-  Serial.write(0x02); // 0x02 to apply changes immediately on remote
-  sum += 0x02;
+  checksum += (0xFF + 0xFE);
+
+  // 0x02 means apply changes immediately on remote
+  Serial.write(0x02);
+  checksum += 0x02;
 
   // command name in ASCII characters
+  // D1 = set pin 1
   Serial.write('D');
   Serial.write('1');
-  sum += 'D';
-  sum += '1';
+  checksum += 'D';
+  checksum += '1';
 
+  // turn on or off
   Serial.write(value);
-  sum += value;
-  Serial.write(0xFF - (sum & 0xFF)); // checksum
-  delay(10); // don't overwhelm serial port
+  checksum += value;
+
+  // checksum
+  Serial.write(0xFF - (checksum & 0xFF));
+
+  // don't overwhelm serial port
+  delay(10);
 }
