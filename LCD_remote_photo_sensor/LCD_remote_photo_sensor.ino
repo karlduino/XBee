@@ -60,7 +60,7 @@ void loop() {
   else remoteIndicator = false;
 
   // set the indicator when there's a state change
-  if(remoteIndicator != lastRemoteIndicator || millis() > lastSent + 1000) {
+  if(remoteIndicator != lastRemoteIndicator || millis() > lastSent + 2000) {
     lcd.setCursor(0,3);
     if(remoteIndicator) {
       setRemoteStatus(0x05);
