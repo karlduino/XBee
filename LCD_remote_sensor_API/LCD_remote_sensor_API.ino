@@ -2,7 +2,7 @@
  * XBee remote with photo sensor attached to pin 0 (analog input)
  *         and led to pin 1 (digital output)
  * XBee coordinator attached to 20x4 LCD display
- * 
+ *
  * An attempt using the xbee-arduino library from https://code.google.com/p/xbee-arduino/
  **/
 
@@ -20,7 +20,8 @@ uint8_t d1Cmd[] = {'D', '1' };
 uint8_t onValue[] = { 0x5 };
 uint8_t offValue[] = { 0x4 };
 
-XBeeAddress64 remoteAddress = XBeeAddress64(0x0013a200, 0x40795C79);
+XBeeAddress64 remoteAddress64 = XBeeAddress64(0x0013a200, 0x40795C79);
+uint16_t remoteAddress16 = 0;
 RemoteAtCommandRequest remoteLEDon = RemoteAtCommandRequest(0x000000000000FFFF, d1Cmd, onValue, sizeof(onValue));
 RemoteAtCommandRequest remoteLEDoff = RemoteAtCommandRequest(0x000000000000FFFF, d1Cmd, offValue, sizeof(offValue));
 RemoteAtCommandResponse remoteAtResponse = RemoteAtCommandResponse();
@@ -30,6 +31,7 @@ int analogValue=0;
 bool remoteIndicator = false;
 bool lastRemoteIndicator = false;
 unsigned long lastSent = 0;
+bool address_set = false;
 
 void setup() {
   xbee.begin(9600);
@@ -69,6 +71,7 @@ void loop() {
       lcd.setCursor(15, 0);
       analogValue = ioSample.getAnalog(0);
       lcd.print(analogValue);
+
     }
     else {
       flashLED(errorLED, 3, 50);
@@ -97,6 +100,12 @@ void loop() {
     lastRemoteIndicator = remoteIndicator;
     lastSent = millis();
   }
+
+  if(remoteAddress16) {
+    remoteLEDon.setRemoteAddress16(remoteAddress16);
+    remoteLEDoff.setRemoteAddress16(remoteAddress16);
+  }
+
 }
 
 void flashLED(int pin, int numTimes, int delayAmount) {
@@ -113,6 +122,16 @@ void getResponse(void) {
   if(xbee.readPacket(5000)) {
     if (xbee.getResponse().getApiId() == REMOTE_AT_COMMAND_RESPONSE) {
       xbee.getResponse().getRemoteAtCommandResponse(remoteAtResponse);
+      remoteAddress64 = remoteAtResponse.getRemoteAddress64();
+      remoteAddress16 = remoteAtResponse.getRemoteAddress16();
+      lcd.setCursor(0, 3);
+      lcd.print(remoteAddress64.getMsb(), HEX);
+      lcd.setCursor(9, 3);
+      lcd.print(remoteAddress64.getLsb(), HEX);
+      lcd.setCursor(0, 2);
+      lcd.print("                    ");
+      lcd.setCursor(0, 2);
+      lcd.print(remoteAddress16, HEX);
 
       if(remoteAtResponse.isError()) {
         flashLED(errorLED, 3, 50);
