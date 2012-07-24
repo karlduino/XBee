@@ -85,6 +85,8 @@ void loop() {
     digitalWrite(lgOpenLED, HIGH);
     digitalWrite(lgClosedLED, LOW);
   }
+
+  delay(1000);
 }
 
 void flashLED(int pin, int numTimes, int delayAmount) {
@@ -96,4 +98,3 @@ void flashLED(int pin, int numTimes, int delayAmount) {
     if(i < numTimes-1) delay(delayAmount);
   }
 }
-
