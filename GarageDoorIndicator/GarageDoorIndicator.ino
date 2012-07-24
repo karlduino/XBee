@@ -4,6 +4,7 @@
  * XBee remote with pins D0 and D1 set to digital input
  *         pin D0 attached to magnetic contact switch; HIGH when small garage door is shut
  *         pin D1 attached to magnetic contact switch; HIGH when large garage door is shut
+ *         sample rate set at 2000 ms (ATIR7D0)
  *
  * XBee coordinator attached to arduino
  *         arduino digital pin  4: small door shut
@@ -15,22 +16,18 @@
  **/
 
 #include <XBee.h>
-
 XBee xbee = XBee();
-
 ZBRxIoSampleResponse ioSample = ZBRxIoSampleResponse();
 
-XBeeAddress64 remoteAddress64 = XBeeAddress64(0x0013a200, 0x40795C79);
-uint16_t remoteAddress16 = 0;
-
-const int smClosedLED = 4;
-const int smOpenLED =   6;
-const int lgClosedLED = 8;
+const int errorLED =    13;
+const int smClosedLED =  4;
+const int smOpenLED =    6;
+const int lgClosedLED =  8;
 const int lgOpenLED =   10;
-const int errorLED = 13;
 
 int lgClosed=0, smClosed=0;
-unsigned long lastRead = 0;
+unsigned long lastRead = 0; 
+const int errorGap = 20000;
 
 void setup() {
   xbee.begin(9600);
@@ -40,23 +37,19 @@ void setup() {
   pinMode(lgOpenLED,  OUTPUT);
   pinMode(lgClosedLED, OUTPUT);
 
-  flashLED(errorLED, 5, 100);
-  delay(500);
-  flashLED(smClosedLED, 5, 100);
-  delay(500);
-  flashLED(smOpenLED, 5, 100);
-  delay(500);
-  flashLED(lgClosedLED, 5, 100);
-  delay(500);
-  flashLED(lgOpenLED, 5, 100);
+  // show that the LEDs are working
+  flashLED(errorLED, 10, 50);
+  flashLED(smClosedLED, 10, 50);
+  flashLED(smOpenLED, 10, 50);
+  flashLED(lgClosedLED, 10, 50);
+  flashLED(lgOpenLED, 10, 50);
 }
 
 void loop() {
   //attempt to read a packet
   xbee.readPacket();
 
-  if (xbee.getResponse().isAvailable()) {
-    // got something
+  if (xbee.getResponse().isAvailable()) { // got something
 
     if (xbee.getResponse().getApiId() == ZB_IO_SAMPLE_RESPONSE) {
       xbee.getResponse().getZBRxIoSampleResponse(ioSample);
@@ -64,6 +57,8 @@ void loop() {
       smClosed = ioSample.isDigitalOn(0);
       lgClosed = ioSample.isDigitalOn(1);
       lastRead = millis();
+
+      if(lastRead + errorGap < lastRead) lastRead = 0; // roll over?
     }
     else {
       flashLED(errorLED, 3, 50);
@@ -72,9 +67,10 @@ void loop() {
     flashLED(errorLED, 3, 50);
   }
 
-  if(millis() > lastRead + 10000) {
+  if(millis() > lastRead + errorGap) {  // haven't gotten signal in 20 seconds
     smClosed = lgClosed = 0;
 
+    // error signal
     flashLED(errorLED, 1, 100);
     flashLED(smClosedLED, 1, 100);
     flashLED(smOpenLED, 1, 100);
@@ -101,12 +97,11 @@ void loop() {
   }
 }
 
-void flashLED(int pin, int numTimes, int delayAmount) {
-
-  for(int i=0; i<numTimes; i++) {
+void flashLED(int pin, int number, int wait) {
+  for(int i=0; i<number; i++) {
     digitalWrite(pin, HIGH);
-    delay(delayAmount);
+    delay(wait);
     digitalWrite(pin, LOW);
-    if(i < numTimes-1) delay(delayAmount);
+    if(i < number-1) delay(wait);
   }
 }
