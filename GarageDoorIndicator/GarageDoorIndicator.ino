@@ -30,6 +30,7 @@ const int lgOpenLED =   10;
 const int errorLED = 13;
 
 int lgClosed=0, smClosed=0;
+unsigned long lastRead = 0;
 
 void setup() {
   xbee.begin(9600);
@@ -62,6 +63,7 @@ void loop() {
 
       smClosed = ioSample.isDigitalOn(0);
       lgClosed = ioSample.isDigitalOn(1);
+      lastRead = millis();
     }
     else {
       flashLED(errorLED, 3, 50);
@@ -70,23 +72,33 @@ void loop() {
     flashLED(errorLED, 3, 50);
   }
 
-  if(smClosed) {
-    digitalWrite(smOpenLED, LOW);
-    digitalWrite(smClosedLED, HIGH);
-  } else {
-    digitalWrite(smOpenLED, HIGH);
-    digitalWrite(smClosedLED, LOW);
-  }
+  if(millis() > lastRead + 10000) {
+    smClosed = lgClosed = 0;
 
-  if(lgClosed) {
-    digitalWrite(lgOpenLED, LOW);
-    digitalWrite(lgClosedLED, HIGH);
-  } else {
-    digitalWrite(lgOpenLED, HIGH);
-    digitalWrite(lgClosedLED, LOW);
+    flashLED(errorLED, 1, 100);
+    flashLED(smClosedLED, 1, 100);
+    flashLED(smOpenLED, 1, 100);
+    flashLED(lgClosedLED, 1, 100);
+    flashLED(lgOpenLED, 1, 100);
   }
+  else {
 
-  delay(1000);
+    if(smClosed) {
+      digitalWrite(smOpenLED, LOW);
+      digitalWrite(smClosedLED, HIGH);
+    } else {
+      digitalWrite(smOpenLED, HIGH);
+      digitalWrite(smClosedLED, LOW);
+    }
+
+    if(lgClosed) {
+      digitalWrite(lgOpenLED, LOW);
+      digitalWrite(lgClosedLED, HIGH);
+    } else {
+      digitalWrite(lgOpenLED, HIGH);
+      digitalWrite(lgClosedLED, LOW);
+    }
+  }
 }
 
 void flashLED(int pin, int numTimes, int delayAmount) {
