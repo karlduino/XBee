@@ -2,8 +2,8 @@
  * Garage door open/close indicator
  *
  * XBee remote with pins D0 and D1 set to digital input
- *         pin D0 attached to magnetic contact switch; HIGH when small garage door is shut
- *         pin D1 attached to magnetic contact switch; HIGH when large garage door is shut
+ *         pin D0 attached to magnetic contact switch; HIGH when large garage door is open
+ *         pin D1 attached to magnetic contact switch; HIGH when small garage door is open
  *         sample rate set at 2000 ms (ATIR7D0)
  *
  * XBee coordinator attached to arduino
@@ -54,8 +54,8 @@ void loop() {
     if (xbee.getResponse().getApiId() == ZB_IO_SAMPLE_RESPONSE) {
       xbee.getResponse().getZBRxIoSampleResponse(ioSample);
 
-      smClosed = 1 - ioSample.isDigitalOn(0);
-      lgClosed = 1 - ioSample.isDigitalOn(1);
+      lgClosed = 1 - ioSample.isDigitalOn(0);
+      smClosed = 1 - ioSample.isDigitalOn(1);
       lastRead = millis();
 
       if(lastRead + errorGap < lastRead) lastRead = 0; // roll over?
