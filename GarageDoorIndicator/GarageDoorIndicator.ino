@@ -8,9 +8,11 @@
  *
  * XBee coordinator attached to arduino
  *         arduino digital pin 10: small door open
- *         arduino digital pin  8: small door shut
+ *         arduino digital pin  9: small door shut
  *         arduino digital pin  6: large door open
- *         arduino digital pin  4: large door shut
+ *         arduino digital pin  5: large door shut
+ *         potentiometer attached to analog pin 0
+ * 
  *
  * xbee-arduino library from https://code.google.com/p/xbee-arduino/
  **/
@@ -21,12 +23,15 @@ ZBRxIoSampleResponse ioSample = ZBRxIoSampleResponse();
 
 const int errorLED =    13;
 const int smOpenLED =   10;
-const int smClosedLED =  8;
+const int smClosedLED =  9;
 const int lgOpenLED =    6;
-const int lgClosedLED =  4;
+const int lgClosedLED =  5;
+const int potPin =       0;
+const int buttonPin =   12;
 
-int lgClosed=0, smClosed=0;
+unsigned int lgClosed=0, smClosed=0;
 unsigned long lastRead = 0; 
+unsigned int potSetting;
 const int errorGap = 20000;
 
 void setup() {
@@ -36,6 +41,8 @@ void setup() {
   pinMode(smClosedLED, OUTPUT);
   pinMode(lgOpenLED,  OUTPUT);
   pinMode(lgClosedLED, OUTPUT);
+  pinMode(potPin, INPUT);
+  pinMode(buttonPin, INPUT);
 
   // show that the LEDs are working
   flashLED(errorLED, 10, 50);
@@ -46,6 +53,9 @@ void setup() {
 }
 
 void loop() {
+  // read potentiometer setting
+  potSetting = analogRead(potPin);
+
   //attempt to read a packet
   xbee.readPacket();
 
@@ -81,7 +91,7 @@ void loop() {
 
     if(smClosed) {
       digitalWrite(smOpenLED, LOW);
-      digitalWrite(smClosedLED, HIGH);
+      analogWrite(smClosedLED, potSetting/4);
     } else {
       digitalWrite(smOpenLED, HIGH);
       digitalWrite(smClosedLED, LOW);
@@ -89,7 +99,7 @@ void loop() {
 
     if(lgClosed) {
       digitalWrite(lgOpenLED, LOW);
-      digitalWrite(lgClosedLED, HIGH);
+      analogWrite(lgClosedLED, potSetting/4);
     } else {
       digitalWrite(lgOpenLED, HIGH);
       digitalWrite(lgClosedLED, LOW);
