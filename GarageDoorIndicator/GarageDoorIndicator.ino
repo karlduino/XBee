@@ -12,7 +12,8 @@
  *         arduino digital pin  6: large door open
  *         arduino digital pin  5: large door shut
  *         potentiometer attached to analog pin 0
- * 
+ *         photoresistor attached to analog pin 1
+ *         pushbutton attached to digital pin 12
  *
  * xbee-arduino library from https://code.google.com/p/xbee-arduino/
  **/
@@ -26,42 +27,77 @@ const int smOpenLED =   10;
 const int smClosedLED =  9;
 const int lgOpenLED =    6;
 const int lgClosedLED =  5;
+
 const int potPin =       0;
 const int buttonPin =   12;
+const int lightPin =     1;
 
 unsigned int lgClosed=0, smClosed=0;
-unsigned long lastRead = 0; 
-unsigned int potSetting;
+unsigned long lastRead = 0;
 const int errorGap = 20000;
+
+// use potentiometer or photosensor to set intensity of LED for "closed" indicators
+unsigned int potSetting;
+unsigned int lightSetting;
+unsigned int greenIntensity;
+unsigned int buttonState = 0, prevButtonState = 0;
+unsigned int usePot = 1; // use pot (vs light sensor) to set green LED?
+
+// conversion from potentiometer/photosensor inputs to led intensity output
+const float pot2intensity = 0.25;
+const float light2intensity = 0.5;
+
+// lowest intensity for "closed" LED indicators
+const int lowIntensity = 1;
+
 
 void setup() {
   xbee.begin(9600);
+  Serial.begin(9600);
 
   pinMode(smOpenLED,  OUTPUT);
   pinMode(smClosedLED, OUTPUT);
   pinMode(lgOpenLED,  OUTPUT);
   pinMode(lgClosedLED, OUTPUT);
   pinMode(potPin, INPUT);
+  pinMode(lightPin, INPUT);
   pinMode(buttonPin, INPUT);
+  digitalWrite(buttonPin, HIGH); // sets pull-up resistor; pressed with be LOW
 
   // show that the LEDs are working
-  flashLED(errorLED, 10, 50);
-  flashLED(smOpenLED, 10, 50);
-  flashLED(smClosedLED, 10, 50);
-  flashLED(lgOpenLED, 10, 50);
-  flashLED(lgClosedLED, 10, 50);
+  for(int i=0; i<20; i++) {
+    flashLED(errorLED, 1, 20);
+    flashLED(smOpenLED, 1, 20);
+    flashLED(smClosedLED, 1, 20);
+    flashLED(lgOpenLED, 1, 20);
+    flashLED(lgClosedLED, 1, 20);
+  }
 }
 
 void loop() {
-  // read potentiometer setting
+  // read potentiometer and photoresistor settings
   potSetting = analogRead(potPin);
+  lightSetting = analogRead(lightPin);
+
+  // check if button has been pressed; switches between use of pot and light sensor
+  buttonState = digitalRead(buttonPin);
+  if(buttonState == LOW && prevButtonState == HIGH) { // low = pressed; high = not
+    usePot = 1 - usePot; delay(10);
+    if(usePot) Serial.println("Use pot");
+    else Serial.println("Use light sensor");
+  }
+  prevButtonState = buttonState;
+
+  // convert reading to intensity for "closed" indicators
+  if(usePot) greenIntensity = potSetting*pot2intensity;
+  else greenIntensity = lightSetting*light2intensity;
+  greenIntensity = constrain(greenIntensity, lowIntensity, 255);
 
   //attempt to read a packet
   xbee.readPacket();
 
-  if (xbee.getResponse().isAvailable()) { // got something
-
-    if (xbee.getResponse().getApiId() == ZB_IO_SAMPLE_RESPONSE) {
+  if(xbee.getResponse().isAvailable()) { // got something
+    if(xbee.getResponse().getApiId() == ZB_IO_SAMPLE_RESPONSE) {
       xbee.getResponse().getZBRxIoSampleResponse(ioSample);
 
       lgClosed = 1 - ioSample.isDigitalOn(0);
@@ -81,17 +117,17 @@ void loop() {
     smClosed = lgClosed = 0;
 
     // error signal
-    flashLED(errorLED, 1, 100);
-    flashLED(smOpenLED, 1, 100);
-    flashLED(smClosedLED, 1, 100);
-    flashLED(lgOpenLED, 1, 100);
-    flashLED(lgClosedLED, 1, 100);
+    flashLED(errorLED, 1, 20);
+    flashLED(smOpenLED, 1, 20);
+    flashLED(smClosedLED, 1, 20);
+    flashLED(lgOpenLED, 1, 20);
+    flashLED(lgClosedLED, 1, 20);
   }
   else {
 
     if(smClosed) {
       digitalWrite(smOpenLED, LOW);
-      analogWrite(smClosedLED, potSetting/4);
+      analogWrite(smClosedLED, greenIntensity);
     } else {
       digitalWrite(smOpenLED, HIGH);
       digitalWrite(smClosedLED, LOW);
@@ -99,7 +135,7 @@ void loop() {
 
     if(lgClosed) {
       digitalWrite(lgOpenLED, LOW);
-      analogWrite(lgClosedLED, potSetting/4);
+      analogWrite(lgClosedLED, greenIntensity);
     } else {
       digitalWrite(lgOpenLED, HIGH);
       digitalWrite(lgClosedLED, LOW);
