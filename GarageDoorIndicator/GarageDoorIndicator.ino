@@ -41,7 +41,7 @@ unsigned int potSetting;
 unsigned int lightSetting;
 unsigned int greenIntensity;
 unsigned int buttonState = 0, prevButtonState = 0;
-unsigned int usePot = 1; // use pot (vs light sensor) to set green LED?
+unsigned int usePot = 0; // use pot (vs light sensor) to set green LED?
 
 // conversion from potentiometer/photosensor inputs to led intensity output
 const float pot2intensity = 0.25;
