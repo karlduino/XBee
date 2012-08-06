@@ -39,16 +39,16 @@ const int errorGap = 20000;
 // use potentiometer or photosensor to set intensity of LED for "closed" indicators
 unsigned int potSetting;
 unsigned int lightSetting;
-unsigned int greenIntensity;
+unsigned int smIntensity, lgIntensity;
 unsigned int buttonState = 0, prevButtonState = 0;
 unsigned int usePot = 0; // use pot (vs light sensor) to set green LED?
 
 // conversion from potentiometer/photosensor inputs to led intensity output
-const float pot2intensity = 0.25;
-const float light2intensity = 0.5;
+const float maxPotValue = 1023;
+const float maxLightValue = 650;
 
 // lowest intensity for "closed" LED indicators
-const int lowIntensity = 1;
+const int lowSmIntensity = 6, lowLgIntensity = 1;
 
 
 void setup() {
@@ -89,9 +89,15 @@ void loop() {
   prevButtonState = buttonState;
 
   // convert reading to intensity for "closed" indicators
-  if(usePot) greenIntensity = potSetting*pot2intensity;
-  else greenIntensity = lightSetting*light2intensity;
-  greenIntensity = constrain(greenIntensity, lowIntensity, 255);
+  if(usePot) {
+    smIntensity = map(potSetting, 0, maxPotValue, lowSmIntensity, 255);
+    lgIntensity = map(potSetting, 0, maxPotValue, lowLgIntensity, 255);
+  } else {
+    smIntensity = map(lightSetting, 0, maxLightValue, lowSmIntensity, 255);
+    lgIntensity = map(lightSetting, 0, maxLightValue, lowLgIntensity, 255);
+  }
+  smIntensity = constrain(smIntensity, 1, 255);
+  lgIntensity = constrain(lgIntensity, 1, 255);
 
   //attempt to read a packet
   xbee.readPacket();
@@ -127,7 +133,7 @@ void loop() {
 
     if(smClosed) {
       digitalWrite(smOpenLED, LOW);
-      analogWrite(smClosedLED, greenIntensity);
+      analogWrite(smClosedLED, smIntensity);
     } else {
       digitalWrite(smOpenLED, HIGH);
       digitalWrite(smClosedLED, LOW);
@@ -135,7 +141,7 @@ void loop() {
 
     if(lgClosed) {
       digitalWrite(lgOpenLED, LOW);
-      analogWrite(lgClosedLED, greenIntensity);
+      analogWrite(lgClosedLED, lgIntensity);
     } else {
       digitalWrite(lgOpenLED, HIGH);
       digitalWrite(lgClosedLED, LOW);
