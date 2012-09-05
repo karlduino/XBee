@@ -65,13 +65,19 @@ void setup() {
   digitalWrite(buttonPin, HIGH); // sets pull-up resistor; pressed with be LOW
 
   // show that the LEDs are working
-  for(int i=0; i<20; i++) {
-    flashLED(errorLED, 1, 20);
-    flashLED(smOpenLED, 1, 20);
-    flashLED(smClosedLED, 1, 20);
-    flashLED(lgOpenLED, 1, 20);
-    flashLED(lgClosedLED, 1, 20);
-  }
+  digitalWrite(errorLED, HIGH);
+  digitalWrite(smOpenLED, HIGH);
+  digitalWrite(smClosedLED, HIGH);
+  digitalWrite(lgOpenLED, HIGH);
+  digitalWrite(lgClosedLED, HIGH);
+
+  delay(1500);
+
+  digitalWrite(errorLED, LOW);
+  digitalWrite(smOpenLED, LOW);
+  digitalWrite(smClosedLED, LOW);
+  digitalWrite(lgOpenLED, LOW);
+  digitalWrite(lgClosedLED, LOW);
 }
 
 void loop() {
@@ -123,11 +129,11 @@ void loop() {
     smClosed = lgClosed = 0;
 
     // error signal
-    flashLED(errorLED, 1, 20);
-    flashLED(smOpenLED, 1, 20);
-    flashLED(smClosedLED, 1, 20);
-    flashLED(lgOpenLED, 1, 20);
-    flashLED(lgClosedLED, 1, 20);
+    digitalWrite(errorLED, HIGH);
+    digitalWrite(smOpenLED, HIGH);
+    digitalWrite(smClosedLED, HIGH);
+    digitalWrite(lgOpenLED, HIGH);
+    digitalWrite(lgClosedLED, HIGH);
   }
   else {
 
