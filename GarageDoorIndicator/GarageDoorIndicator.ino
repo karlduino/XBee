@@ -3,8 +3,8 @@
  *
  * XBee remote with pins D0 and D1 set to digital input
  *         pin D0 attached to magnetic contact switch; HIGH when large garage door is open
- *         pin D1 attached to magnetic contact switch; LOW when small garage door is open
- *                  (switch for large door normally closed; opposite for small door)
+ *         pin D1 attached to magnetic contact switch; HIGH when small garage door is open
+ *                  (switch for both doors are normally closed)
  *         sample rate set at 2000 ms (ATIR7D0)
  *
  * XBee coordinator attached to arduino
@@ -113,10 +113,8 @@ void loop() {
     if(xbee.getResponse().getApiId() == ZB_IO_SAMPLE_RESPONSE) {
       xbee.getResponse().getZBRxIoSampleResponse(ioSample);
 
-      lgClosed = 1 - ioSample.isDigitalOn(0); // reading HIGH = door open   -> 0
-      smClosed = ioSample.isDigitalOn(1);     // reading HIGH = door closed -> 1
-      // (the two door switches set up different, since I was having problems
-      // with the reed switch for the small door)
+      lgClosed = 1 - ioSample.isDigitalOn(0); // reading HIGH = door open -> 0
+      smClosed = 1 - ioSample.isDigitalOn(1); // reading HIGH = door open -> 0
 
       lastRead = millis();
 
