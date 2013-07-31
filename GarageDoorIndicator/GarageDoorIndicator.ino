@@ -50,13 +50,6 @@ const float maxLightValue = 650;
 // lowest intensity for "closed" LED indicators
 const int lowSmIntensity = 6, lowLgIntensity = 1;
 
-// constants for pulsing
-const int nsteps = 500;
-const int timePerPulse = 7000;
-const int maxOutput = 255*0.25;
-const double minValue = 2.0;
-int curstep = 0; // current pulse amount
-
 void setup() {
   xbee.begin(9600);
   Serial.begin(9600);
@@ -136,10 +129,13 @@ void loop() {
     smClosed = lgClosed = 0;
 
     // error signal
-    pulseLEDs();
+    analogWrite(errorLED, smIntensity);
+    analogWrite(smOpenLED, smIntensity);
+    analogWrite(smClosedLED, smIntensity);
+    analogWrite(lgOpenLED, lgIntensity);
+    analogWrite(lgClosedLED, lgIntensity);
   }
   else {
-    curstep = 0;
     digitalWrite(errorLED, LOW);
 
     if(smClosed) {
@@ -167,24 +163,4 @@ void flashLED(int pin, int number, int wait) {
     digitalWrite(pin, LOW);
     if(i < number-1) delay(wait);
   }
-}
-
-void pulseLEDs() {
-  delay(timePerPulse/nsteps);
-  double value = ((double)maxOutput*(1-abs(cos((double)(curstep+1) * M_PI / (double)nsteps))));
-  if(value < minValue) value = minValue;
-  analogWrite(errorLED, (int)value);
-
-  value *= ((double)smIntensity/(double)maxOutput);
-  if(value < minValue) value = minValue;
-  analogWrite(smOpenLED, value);
-  analogWrite(smClosedLED, value);
-
-  value *= ((double)lgIntensity/(double)smIntensity);
-  if(value < minValue) value = minValue;
-  analogWrite(lgOpenLED, value);
-  analogWrite(lgClosedLED, value);
-
-  curstep++;
-  if(curstep >= nsteps) curstep = 0;
 }
