@@ -23,7 +23,7 @@ uint8_t offValue[] = { 0x4 };
 XBeeAddress64 remote64[2] = { XBeeAddress64(0x0013a200, 0x4092d672),
                               XBeeAddress64(0x0013a200, 0x4092d7d8) };
 XBeeAddress64 tmpRemote64;
-uint16_t remote16[2] = { 0x5593, 0x3d48 };
+uint16_t remote16[2] = { 0x0, 0xEF5C };
 uint16_t tmpRemote16;
 RemoteAtCommandRequest remoteCommand[2];
 RemoteAtCommandResponse remoteResponse = RemoteAtCommandResponse();
@@ -35,7 +35,7 @@ int which_xbee_cmd = 1;
 
 void setup() {
   xbee.begin(9600);
-  lcd.begin(16, 4);
+  lcd.begin(16, 2);
   lcd.setBacklight(TEAL);
 
   for(int i=0; i<2; i++) {
