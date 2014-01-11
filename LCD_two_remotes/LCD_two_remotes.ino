@@ -6,18 +6,22 @@
  **/
 
 #include <XBee.h>
-#include <LiquidCrystal.h>
 #include <Wire.h>
+#include <Adafruit_MCP23017.h>
+#include <Adafruit_RGBLCDShield.h>
 
 XBee xbee = XBee();
-LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
+Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
+
+// background color
+#define TEAL 0x6
 
 uint8_t d0Cmd[] = {'D', '0' };
 uint8_t onValue[] = { 0x5 };
 uint8_t offValue[] = { 0x4 };
 
-XBeeAddress64 remote64[2] = { XBeeAddress64(0x0013a200, 0x40795C79),
-                              XBeeAddress64(0x0013a200, 0x40795a8d) };
+XBeeAddress64 remote64[2] = { XBeeAddress64(0x0013a200, 0x4092d672),
+                              XBeeAddress64(0x0013a200, 0x4092d7d8) };
 XBeeAddress64 tmpRemote64;
 uint16_t remote16[2] = { 0x5593, 0x3d48 };
 uint16_t tmpRemote16;
@@ -31,7 +35,8 @@ int which_xbee_cmd = 1;
 
 void setup() {
   xbee.begin(9600);
-  lcd.begin(20, 4);
+  lcd.begin(16, 4);
+  lcd.setBacklight(TEAL);
 
   for(int i=0; i<2; i++) {
     //    remoteCommand[i] = RemoteAtCommandRequest(remote64[i], d0Cmd, onValue, sizeof(onValue));
