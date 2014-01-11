@@ -7,20 +7,20 @@
  **/
 
 #include <XBee.h>
-#include <LiquidCrystal.h>
 #include <Wire.h>
+#include <Adafruit_MCP23017.h>
+#include <Adafruit_RGBLCDShield.h>
 
 XBee xbee = XBee();
+Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
 
 ZBRxIoSampleResponse ioSample = ZBRxIoSampleResponse();
-
-LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 
 uint8_t d1Cmd[] = {'D', '1' };
 uint8_t onValue[] = { 0x5 };
 uint8_t offValue[] = { 0x4 };
 
-XBeeAddress64 remoteAddress64 = XBeeAddress64(0x0013a200, 0x40795C79);
+XBeeAddress64 remoteAddress64 = XBeeAddress64(0x0013a200, 0x4092d7d8);
 uint16_t remoteAddress16 = 0;
 RemoteAtCommandRequest remoteLEDon = RemoteAtCommandRequest(0x000000000000FFFF, d1Cmd, onValue, sizeof(onValue));
 RemoteAtCommandRequest remoteLEDoff = RemoteAtCommandRequest(0x000000000000FFFF, d1Cmd, offValue, sizeof(offValue));
@@ -35,7 +35,9 @@ bool address_set = false;
 
 void setup() {
   xbee.begin(9600);
-  lcd.begin(20, 4);
+  lcd.begin(16, 2);
+  lcd.setBacklight(0x6); // TEAL
+
   pinMode(errorLED, OUTPUT);
   delay(2500);
   flashLED(errorLED, 3, 50);
@@ -71,6 +73,7 @@ void loop() {
       lcd.setCursor(15, 0);
       analogValue = ioSample.getAnalog(0);
       lcd.print(analogValue);
+      delay(1000);
 
     }
     else {
@@ -88,10 +91,12 @@ void loop() {
     lcd.setCursor(0,1);
     if(remoteIndicator) {
       xbee.send(remoteLEDon);
+      lcd.home();
       lcd.print("remote LED on ");
     }
     else {
       xbee.send(remoteLEDoff);
+      lcd.home();
       lcd.print("remote LED off");
     }
 
@@ -124,13 +129,14 @@ void getResponse(void) {
       xbee.getResponse().getRemoteAtCommandResponse(remoteAtResponse);
       remoteAddress64 = remoteAtResponse.getRemoteAddress64();
       remoteAddress16 = remoteAtResponse.getRemoteAddress16();
-      lcd.setCursor(0, 3);
+      lcd.setCursor(0, 1);
       lcd.print(remoteAddress64.getMsb(), HEX);
-      lcd.setCursor(9, 3);
+      lcd.setCursor(8, 1);
       lcd.print(remoteAddress64.getLsb(), HEX);
-      lcd.setCursor(0, 2);
+      delay(1000);
+      lcd.setCursor(0, 1);
       lcd.print("                    ");
-      lcd.setCursor(0, 2);
+      lcd.setCursor(0, 1);
       lcd.print(remoteAddress16, HEX);
 
       if(remoteAtResponse.isError()) {
