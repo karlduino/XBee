@@ -1,7 +1,8 @@
 /**
  * XBee button/light combination, as a test
  *
- * here, button connected to Arduino digital pin 2 with 10k Ohm pull-down resistor
+ * here, button connected to Arduino digital pin 2 and to ground
+ * (using internal pull-up resistor)
  * with each press, writes message that rotates among R, Y, G
  *
  * Based on code from Robert Faludi, Building wireless sensor networks, Chapter 3
@@ -14,12 +15,13 @@ int state = 0;
 
 void setup() {
   pinMode(BUTTON, INPUT);
+  digitalWrite(BUTTON, HIGH); // set pull-up resistor
   Serial.begin(9600);
 }
 
 
 void loop() {
-  button_val = digitalRead(BUTTON);
+  button_val = 1 - digitalRead(BUTTON);
 
   if((button_val == HIGH) && (prev_button_val == LOW)) {
       state++;
